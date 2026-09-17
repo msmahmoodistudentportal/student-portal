@@ -4,76 +4,147 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>سامانه دانش‌آموزی</title>
+  <title>ورود به سامانه دانش‌آموزی</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f7fb;
-      color: #1f2937;
+      font-family: Tahoma, Arial, sans-serif;
+      background: #f4f8fb;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
-    .container {
-      max-width: 700px;
-      margin: 80px auto;
-      padding: 30px;
+    .login-box {
+      width: 90%;
+      max-width: 400px;
       background: white;
-      border-radius: 16px;
+      padding: 35px 30px;
+      border-radius: 18px;
       box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-      text-align: center;
     }
 
-    h1 {
+    .logo {
+      text-align: center;
+      font-size: 48px;
       margin-bottom: 10px;
     }
 
-    p {
-      color: #6b7280;
+    h1 {
+      text-align: center;
+      color: #1e3a5f;
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #777;
+      font-size: 14px;
+      margin-bottom: 28px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 7px;
+      color: #333;
+      font-size: 14px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      margin-bottom: 18px;
+      border: 1px solid #d6dfe7;
+      border-radius: 10px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    input:focus {
+      border-color: #4b91c9;
     }
 
     button {
-      margin-top: 20px;
-      padding: 12px 24px;
+      width: 100%;
+      padding: 13px;
       border: none;
       border-radius: 10px;
-      background: #2563eb;
+      background: #2675ad;
       color: white;
       font-size: 16px;
       cursor: pointer;
     }
 
     button:hover {
-      background: #1d4ed8;
+      background: #1d6091;
     }
 
-    #result {
-      margin-top: 25px;
-      padding: 15px;
-      border-radius: 10px;
-      background: #f3f4f6;
-      min-height: 24px;
+    button:disabled {
+      background: #9bb7ca;
+      cursor: not-allowed;
+    }
+
+    #message {
+      margin-top: 18px;
+      text-align: center;
+      font-size: 14px;
+      min-height: 20px;
+    }
+
+    .success {
+      color: #218838;
+    }
+
+    .error {
+      color: #c62828;
     }
   </style>
 </head>
 
 <body>
 
-  <div class="container">
+  <div class="login-box">
 
-    <h1>🎓 سامانه دانش‌آموزی</h1>
+    <div class="logo">🎓</div>
 
-    <p>
-      اتصال Frontend به Backend
-    </p>
+    <h1>سامانه دانش‌آموزی</h1>
 
-    <button onclick="testBackend()">
-      بررسی اتصال به Backend
-    </button>
-
-    <div id="result">
-      هنوز تست نشده است.
+    <div class="subtitle">
+      برای ورود، نام کاربری و رمز عبور خود را وارد کنید.
     </div>
+
+    <form id="loginForm">
+
+      <label for="username">نام کاربری</label>
+      <input
+        type="text"
+        id="username"
+        placeholder="نام کاربری"
+        required
+      >
+
+      <label for="password">رمز عبور</label>
+      <input
+        type="password"
+        id="password"
+        placeholder="رمز عبور"
+        required
+      >
+
+      <button type="submit" id="loginButton">
+        ورود به سامانه
+      </button>
+
+    </form>
+
+    <div id="message"></div>
 
   </div>
 
@@ -82,39 +153,90 @@
     const API_URL =
       "https://script.google.com/macros/s/AKfycbx-9uxxqe9EXAsWLSD8QZ5vrsKQUbjnH-uL9sC_SpDQnp8EKqjztJDcKnu_zx_lFfya/exec";
 
-    async function testBackend() {
+    const loginForm = document.getElementById("loginForm");
+    const loginButton = document.getElementById("loginButton");
+    const message = document.getElementById("message");
 
-      const result = document.getElementById("result");
+    loginForm.addEventListener("submit", async function(event) {
 
-      result.textContent = "⏳ در حال اتصال...";
+      event.preventDefault();
+
+      const username =
+        document.getElementById("username").value.trim();
+
+      const password =
+        document.getElementById("password").value;
+
+      message.textContent = "";
+      message.className = "";
+
+      loginButton.disabled = true;
+      loginButton.textContent = "در حال ورود...";
 
       try {
 
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify({
+            action: "login",
+            username: username,
+            password: password
+          })
+        });
 
-        if (!response.ok) {
-          throw new Error("HTTP " + response.status);
-        }
+        const result = await response.json();
 
-        const data = await response.json();
+        if (result.success) {
 
-        if (data.success) {
-          result.textContent =
-            "✅ Backend متصل است — " + data.status;
+          message.textContent =
+            "ورود موفق بود. خوش آمدید " +
+            result.user.firstName + " " +
+            result.user.lastName + " 🌷";
+
+          message.className = "success";
+
+          // فعلاً Session را ذخیره می‌کنیم
+          localStorage.setItem(
+            "sessionId",
+            result.sessionId
+          );
+
+          localStorage.setItem(
+            "user",
+            JSON.stringify(result.user)
+          );
+
+          // مرحله بعدی: انتقال به داشبورد
+          // window.location.href = "dashboard.html";
+
         } else {
-          result.textContent =
-            "⚠️ Backend پاسخ داد ولی وضعیت نامشخص است.";
+
+          message.textContent =
+            result.message || "نام کاربری یا رمز عبور اشتباه است.";
+
+          message.className = "error";
         }
 
       } catch (error) {
 
         console.error(error);
 
-        result.textContent =
-          "❌ اتصال برقرار نشد.";
+        message.textContent =
+          "خطا در ارتباط با سامانه.";
+
+        message.className = "error";
+
+      } finally {
+
+        loginButton.disabled = false;
+        loginButton.textContent = "ورود به سامانه";
 
       }
-    }
+
+    });
 
   </script>
 
