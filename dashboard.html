@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>داشبورد دانش‌آموز</title>
+  <title>سامانه دانش‌آموزی</title>
 
   <style>
     * {
@@ -14,221 +14,424 @@
     body {
       margin: 0;
       font-family: Tahoma, Arial, sans-serif;
-      background: #f4f8fb;
-      min-height: 100vh;
+      background: #f5f7fb;
+      color: #1f2937;
     }
 
     .header {
-      background: #2675ad;
-      color: white;
-      padding: 20px;
-      text-align: center;
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 18px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .header h1 {
       margin: 0;
-      font-size: 24px;
-    }
-
-    .container {
-      width: 90%;
-      max-width: 900px;
-      margin: 30px auto;
-    }
-
-    .welcome-box {
-      background: white;
-      border-radius: 18px;
-      padding: 30px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-      margin-bottom: 25px;
-    }
-
-    .welcome-box h2 {
-      margin-top: 0;
-      color: #1e3a5f;
-    }
-
-    .user-info {
-      line-height: 2;
-      color: #444;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 20px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 18px;
-      padding: 25px;
-      text-align: center;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.06);
-    }
-
-    .card-icon {
-      font-size: 40px;
-      margin-bottom: 12px;
-    }
-
-    .card h3 {
-      color: #1e3a5f;
-      margin-bottom: 10px;
-    }
-
-    .card p {
-      color: #777;
-      font-size: 14px;
+      font-size: 22px;
+      color: #1d4ed8;
     }
 
     .logout {
-      margin-top: 25px;
-      text-align: center;
-    }
-
-    .logout button {
-      padding: 11px 25px;
       border: none;
-      border-radius: 10px;
-      background: #c62828;
+      background: #ef4444;
       color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
       cursor: pointer;
       font-size: 14px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
+
+    .welcome {
+      background: white;
+      border-radius: 14px;
+      padding: 25px;
+      margin-bottom: 25px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+    }
+
+    .welcome h2 {
+      margin-top: 0;
+      color: #111827;
+    }
+
+    .user-info {
+      color: #6b7280;
+      line-height: 2;
+    }
+
+    .section-title {
+      margin: 30px 0 15px;
+      font-size: 20px;
+    }
+
+    .activities {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    .activity-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.06);
+    }
+
+    .activity-card h3 {
+      margin-top: 0;
+      color: #1d4ed8;
+    }
+
+    .description {
+      color: #4b5563;
+      line-height: 1.8;
+    }
+
+    .meta {
+      margin-top: 15px;
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 2;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      background: #dcfce7;
+      color: #166534;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .empty {
+      background: white;
+      padding: 30px;
+      text-align: center;
+      border-radius: 14px;
+      color: #6b7280;
+    }
+
+    .loading {
+      background: white;
+      padding: 30px;
+      text-align: center;
+      border-radius: 14px;
+      color: #2563eb;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 18px;
+      border-radius: 10px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 600px) {
+      .header {
+        padding: 15px;
+      }
+
+      .header h1 {
+        font-size: 18px;
+      }
+
+      .container {
+        margin-top: 20px;
+      }
     }
   </style>
 </head>
 
 <body>
 
-  <div class="header">
-    <h1>🎓 داشبورد دانش‌آموز</h1>
-  </div>
+  <header class="header">
+    <h1>سامانه دانش‌آموزی</h1>
 
-  <div class="container">
+    <button class="logout" onclick="logout()">
+      خروج
+    </button>
+  </header>
 
-    <div class="welcome-box">
+
+  <main class="container">
+
+    <section class="welcome">
 
       <h2 id="welcomeMessage">
         در حال بارگذاری...
       </h2>
 
       <div class="user-info">
-
-        <div>
-          <strong>نام و نام خانوادگی:</strong>
-          <span id="fullName">-</span>
-        </div>
-
         <div>
           <strong>نام کاربری:</strong>
           <span id="username">-</span>
         </div>
 
         <div>
-          <strong>شناسه کاربر:</strong>
+          <strong>شناسه دانش‌آموز:</strong>
           <span id="userId">-</span>
         </div>
-
       </div>
 
-    </div>
+    </section>
 
-    <div class="cards">
 
-      <div class="card">
-        <div class="card-icon">📚</div>
-        <h3>تکالیف من</h3>
-        <p>
-          مشاهده تکالیف و فعالیت‌های درسی
-        </p>
+    <h2 class="section-title">
+      📚 تکالیف من
+    </h2>
+
+
+    <section id="activitiesContainer">
+
+      <div class="loading">
+        در حال دریافت تکالیف...
       </div>
 
-      <div class="card">
-        <div class="card-icon">📤</div>
-        <h3>ارسال تکلیف</h3>
-        <p>
-          ارسال فایل PDF تکالیف
-        </p>
-      </div>
+    </section>
 
-      <div class="card">
-        <div class="card-icon">👤</div>
-        <h3>پروفایل من</h3>
-        <p>
-          مشاهده اطلاعات دانش‌آموز
-        </p>
-      </div>
+  </main>
 
-    </div>
-
-    <div class="logout">
-      <button id="logoutButton">
-        خروج از سامانه
-      </button>
-    </div>
-
-  </div>
 
   <script>
 
-    // دریافت اطلاعات ذخیره‌شده هنگام ورود
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbx-9uxxqe9EXAsWLSD8QZ5vrsKQUbjnH-uL9sC_SpDQnp8EKqjztJDcKnu_zx_lFfya/exec";
+
+
+    // دریافت اطلاعات ذخیره‌شده بعد از ورود
     const sessionId = localStorage.getItem("sessionId");
     const userData = localStorage.getItem("user");
 
-    // اگر کاربر وارد نشده باشد
+
+    // اگر Session وجود نداشت، برگشت به صفحه ورود
     if (!sessionId || !userData) {
 
       window.location.href = "index.html";
 
-    } else {
+    }
+
+
+    let user;
+
+    try {
+
+      user = JSON.parse(userData);
+
+    } catch (error) {
+
+      localStorage.clear();
+      window.location.href = "index.html";
+
+    }
+
+
+    // نمایش اطلاعات دانش‌آموز
+    document.getElementById("welcomeMessage").textContent =
+      `سلام ${user.firstName} ${user.lastName} عزیز 🌷`;
+
+    document.getElementById("username").textContent =
+      user.userId || "-";
+
+    document.getElementById("userId").textContent =
+      user.userId || "-";
+
+
+    // دریافت تکالیف دانش‌آموز
+    async function loadActivities() {
+
+      const container =
+        document.getElementById("activitiesContainer");
+
 
       try {
 
-        const user = JSON.parse(userData);
+        const response = await fetch(API_URL, {
 
-        // نام و نام خانوادگی
-        const fullName =
-          (user.firstName || "") + " " +
-          (user.lastName || "");
+          method: "POST",
 
-        document.getElementById("welcomeMessage").textContent =
-          "خوش آمدید " + fullName + " 🌷";
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
 
-        document.getElementById("fullName").textContent =
-          fullName;
+          body: JSON.stringify({
 
-        document.getElementById("username").textContent =
-          user.username || "-";
+            action: "getActivities",
 
-        document.getElementById("userId").textContent =
-          user.userId || "-";
+            sessionId: sessionId
+
+          })
+
+        });
+
+
+        const result = await response.json();
+
+
+        if (!result.success) {
+
+          throw new Error(
+            result.message || "دریافت تکالیف ناموفق بود."
+          );
+
+        }
+
+
+        const activities = result.activities || [];
+
+
+        if (activities.length === 0) {
+
+          container.innerHTML = `
+            <div class="empty">
+              هنوز تکلیفی برای شما ثبت نشده است. 📭
+            </div>
+          `;
+
+          return;
+        }
+
+
+        container.innerHTML = "";
+
+
+        activities.forEach(activity => {
+
+          const card =
+            document.createElement("div");
+
+          card.className = "activity-card";
+
+
+          const submittedDate =
+            activity.submittedAt
+              ? new Date(activity.submittedAt)
+                  .toLocaleString("fa-IR")
+              : "-";
+
+
+          const score =
+            activity.score !== ""
+              ? activity.score
+              : "هنوز نمره ثبت نشده";
+
+
+          const teacherComment =
+            activity.teacherComment
+              ? activity.teacherComment
+              : "هنوز نظری از طرف معلم ثبت نشده است.";
+
+
+          card.innerHTML = `
+
+            <h3>
+              📘 ${escapeHtml(activity.title)}
+            </h3>
+
+            <div class="description">
+              ${escapeHtml(activity.description || "")}
+            </div>
+
+            <div class="meta">
+
+              <div>
+                📄 فایل:
+                ${escapeHtml(activity.fileName || "-")}
+              </div>
+
+              <div>
+                🕒 تاریخ ارسال:
+                ${submittedDate}
+              </div>
+
+              <div>
+                📝 نمره:
+                ${escapeHtml(String(score))}
+              </div>
+
+              <div>
+                💬 نظر معلم:
+                ${escapeHtml(teacherComment)}
+              </div>
+
+              <div class="status">
+                وضعیت: ${escapeHtml(activity.status || "-")}
+              </div>
+
+            </div>
+
+          `;
+
+
+          container.appendChild(card);
+
+        });
+
 
       } catch (error) {
 
         console.error(error);
 
-        localStorage.removeItem("sessionId");
-        localStorage.removeItem("user");
 
-        window.location.href = "index.html";
+        container.innerHTML = `
+
+          <div class="error">
+
+            ❌ دریافت تکالیف با خطا مواجه شد.
+
+            <br><br>
+
+            ${escapeHtml(error.message)}
+
+          </div>
+
+        `;
 
       }
 
     }
 
 
-    // خروج از سامانه
-    document.getElementById("logoutButton")
-      .addEventListener("click", function() {
+    // جلوگیری از ورود HTML ناخواسته به صفحه
+    function escapeHtml(value) {
 
-        localStorage.removeItem("sessionId");
-        localStorage.removeItem("user");
+      return String(value)
 
-        window.location.href = "index.html";
+        .replace(/&/g, "&amp;")
 
-      });
+        .replace(/</g, "&lt;")
+
+        .replace(/>/g, "&gt;")
+
+        .replace(/"/g, "&quot;")
+
+        .replace(/'/g, "&#039;");
+
+    }
+
+
+    // خروج
+    function logout() {
+
+      localStorage.removeItem("sessionId");
+      localStorage.removeItem("user");
+
+      window.location.href = "index.html";
+
+    }
+
+
+    // شروع دریافت اطلاعات
+    loadActivities();
 
   </script>
 
