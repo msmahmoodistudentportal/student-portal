@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>سامانه دانش‌آموزی</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      color: #1f2937;
+    }
+
+    .container {
+      max-width: 700px;
+      margin: 80px auto;
+      padding: 30px;
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #6b7280;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+
+    #result {
+      margin-top: 25px;
+      padding: 15px;
+      border-radius: 10px;
+      background: #f3f4f6;
+      min-height: 24px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <h1>🎓 سامانه دانش‌آموزی</h1>
+
+    <p>
+      اتصال Frontend به Backend
+    </p>
+
+    <button onclick="testBackend()">
+      بررسی اتصال به Backend
+    </button>
+
+    <div id="result">
+      هنوز تست نشده است.
+    </div>
+
+  </div>
+
+  <script>
+
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbx-9uxxqe9EXAsWLSD8QZ5vrsKQUbjnH-uL9sC_SpDQnp8EKqjztJDcKnu_zx_lFfya/exec";
+
+    async function testBackend() {
+
+      const result = document.getElementById("result");
+
+      result.textContent = "⏳ در حال اتصال...";
+
+      try {
+
+        const response = await fetch(API_URL);
+
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
+        }
+
+        const data = await response.json();
+
+        if (data.success) {
+          result.textContent =
+            "✅ Backend متصل است — " + data.status;
+        } else {
+          result.textContent =
+            "⚠️ Backend پاسخ داد ولی وضعیت نامشخص است.";
+        }
+
+      } catch (error) {
+
+        console.error(error);
+
+        result.textContent =
+          "❌ اتصال برقرار نشد.";
+
+      }
+    }
+
+  </script>
+
+</body>
+</html>
