@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>داشبورد دانش‌آموز</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Tahoma, Arial, sans-serif;
+      background: #f4f8fb;
+      min-height: 100vh;
+    }
+
+    .header {
+      background: #2675ad;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 900px;
+      margin: 30px auto;
+    }
+
+    .welcome-box {
+      background: white;
+      border-radius: 18px;
+      padding: 30px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+      margin-bottom: 25px;
+    }
+
+    .welcome-box h2 {
+      margin-top: 0;
+      color: #1e3a5f;
+    }
+
+    .user-info {
+      line-height: 2;
+      color: #444;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 18px;
+      padding: 25px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.06);
+    }
+
+    .card-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .card h3 {
+      color: #1e3a5f;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: #777;
+      font-size: 14px;
+    }
+
+    .logout {
+      margin-top: 25px;
+      text-align: center;
+    }
+
+    .logout button {
+      padding: 11px 25px;
+      border: none;
+      border-radius: 10px;
+      background: #c62828;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="header">
+    <h1>🎓 داشبورد دانش‌آموز</h1>
+  </div>
+
+  <div class="container">
+
+    <div class="welcome-box">
+
+      <h2 id="welcomeMessage">
+        در حال بارگذاری...
+      </h2>
+
+      <div class="user-info">
+
+        <div>
+          <strong>نام و نام خانوادگی:</strong>
+          <span id="fullName">-</span>
+        </div>
+
+        <div>
+          <strong>نام کاربری:</strong>
+          <span id="username">-</span>
+        </div>
+
+        <div>
+          <strong>شناسه کاربر:</strong>
+          <span id="userId">-</span>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-icon">📚</div>
+        <h3>تکالیف من</h3>
+        <p>
+          مشاهده تکالیف و فعالیت‌های درسی
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">📤</div>
+        <h3>ارسال تکلیف</h3>
+        <p>
+          ارسال فایل PDF تکالیف
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon">👤</div>
+        <h3>پروفایل من</h3>
+        <p>
+          مشاهده اطلاعات دانش‌آموز
+        </p>
+      </div>
+
+    </div>
+
+    <div class="logout">
+      <button id="logoutButton">
+        خروج از سامانه
+      </button>
+    </div>
+
+  </div>
+
+  <script>
+
+    // دریافت اطلاعات ذخیره‌شده هنگام ورود
+    const sessionId = localStorage.getItem("sessionId");
+    const userData = localStorage.getItem("user");
+
+    // اگر کاربر وارد نشده باشد
+    if (!sessionId || !userData) {
+
+      window.location.href = "index.html";
+
+    } else {
+
+      try {
+
+        const user = JSON.parse(userData);
+
+        // نام و نام خانوادگی
+        const fullName =
+          (user.firstName || "") + " " +
+          (user.lastName || "");
+
+        document.getElementById("welcomeMessage").textContent =
+          "خوش آمدید " + fullName + " 🌷";
+
+        document.getElementById("fullName").textContent =
+          fullName;
+
+        document.getElementById("username").textContent =
+          user.username || "-";
+
+        document.getElementById("userId").textContent =
+          user.userId || "-";
+
+      } catch (error) {
+
+        console.error(error);
+
+        localStorage.removeItem("sessionId");
+        localStorage.removeItem("user");
+
+        window.location.href = "index.html";
+
+      }
+
+    }
+
+
+    // خروج از سامانه
+    document.getElementById("logoutButton")
+      .addEventListener("click", function() {
+
+        localStorage.removeItem("sessionId");
+        localStorage.removeItem("user");
+
+        window.location.href = "index.html";
+
+      });
+
+  </script>
+
+</body>
+</html>
