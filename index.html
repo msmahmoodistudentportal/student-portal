@@ -210,7 +210,10 @@
           );
 
           // مرحله بعدی: انتقال به داشبورد
-          window.location.href = "dashboard.html";
+          window.location.href =
+            result.user.role === "Teacher"
+              ? "teacher-dashboard.html"
+              : "dashboard.html";
 
         } else {
 

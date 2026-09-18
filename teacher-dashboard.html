@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>داشبورد معلم</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Tahoma, Arial, sans-serif;
+      background: #f5f7fb;
+      color: #1f2937;
+    }
+
+    .header {
+      background: white;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 18px 30px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 22px;
+      color: #1d4ed8;
+    }
+
+    .logout {
+      border: none;
+      background: #ef4444;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .logout:hover {
+      background: #dc2626;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 35px auto;
+      padding: 0 20px;
+    }
+
+    .welcome {
+      background: white;
+      border-radius: 14px;
+      padding: 25px;
+      margin-bottom: 25px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .welcome h2 {
+      margin-top: 0;
+      color: #111827;
+    }
+
+    .user-info {
+      color: #6b7280;
+      line-height: 2;
+    }
+
+    .section-title {
+      margin: 30px 0 15px;
+      font-size: 20px;
+    }
+
+    .activities {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    .activity-card {
+      background: white;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .activity-card h3 {
+      margin-top: 0;
+      color: #1d4ed8;
+      line-height: 1.7;
+    }
+
+    .meta {
+      margin-top: 15px;
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 2.2;
+    }
+
+    .status {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 20px;
+      background: #dcfce7;
+      color: #166534;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .empty,
+    .loading {
+      background: white;
+      padding: 30px;
+      text-align: center;
+      border-radius: 14px;
+      color: #6b7280;
+    }
+
+    .loading {
+      color: #2563eb;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 18px;
+      border-radius: 10px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 600px) {
+      .header {
+        padding: 15px;
+      }
+
+      .header h1 {
+        font-size: 18px;
+      }
+
+      .container {
+        margin-top: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="header">
+    <h1>داشبورد معلم</h1>
+
+    <button class="logout" onclick="logout()">
+      خروج
+    </button>
+  </header>
+
+  <main class="container">
+    <section class="welcome">
+      <h2 id="welcomeMessage">در حال بارگذاری...</h2>
+
+      <div class="user-info">
+        <div>
+          <strong>نام کاربری:</strong>
+          <span id="username">-</span>
+        </div>
+
+        <div>
+          <strong>شناسه معلم:</strong>
+          <span id="userId">-</span>
+        </div>
+      </div>
+    </section>
+
+    <h2 class="section-title">📚 فعالیت‌های ارسالی دانش‌آموزان</h2>
+
+    <section id="activitiesContainer">
+      <div class="loading">در حال دریافت فعالیت‌ها...</div>
+    </section>
+  </main>
+
+  <script>
+    const API_URL =
+      "https://script.google.com/macros/s/AKfycbx-9uxxqe9EXAsWLSD8QZ5vrsKQUbjnH-uL9sC_SpDQnp8EKqjztJDcKnu_zx_lFfya/exec";
+
+    const sessionId = localStorage.getItem("sessionId");
+    const userData = localStorage.getItem("user");
+    const container = document.getElementById("activitiesContainer");
+
+    if (!sessionId || !userData) {
+      window.location.href = "index.html";
+    }
+
+    let user;
+
+    try {
+      user = JSON.parse(userData);
+    } catch (error) {
+      localStorage.clear();
+      window.location.href = "index.html";
+    }
+
+    if (!user || user.role !== "Teacher") {
+      container.innerHTML = `
+        <div class="error">
+          دسترسی به داشبورد معلم مجاز نیست.
+        </div>
+      `;
+    } else {
+      document.getElementById("welcomeMessage").textContent =
+        `سلام ${user.firstName || "معلم"} ${user.lastName || "عزیز"} 🌷`;
+      document.getElementById("username").textContent = user.username || user.userId || "-";
+      document.getElementById("userId").textContent = user.userId || "-";
+      loadActivities();
+    }
+
+    async function loadActivities() {
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify({
+            action: "getTeacherActivities",
+            sessionId: sessionId
+          })
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || result.message || "دریافت فعالیت‌ها ناموفق بود.");
+        }
+
+        const activities = result.activities || [];
+
+        if (activities.length === 0) {
+          container.innerHTML = `
+            <div class="empty">
+              هنوز فعالیتی از طرف دانش‌آموزان ارسال نشده است. 📭
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = '<div class="activities"></div>';
+        const activitiesGrid = container.querySelector(".activities");
+
+        activities.forEach(activity => {
+          const card = document.createElement("article");
+          card.className = "activity-card";
+
+          const submittedDate = activity.submittedAt
+            ? new Date(activity.submittedAt).toLocaleString("fa-IR")
+            : "-";
+
+          card.innerHTML = `
+            <h3>📘 ${escapeHtml(activity.title || "بدون عنوان")}</h3>
+
+            <div class="meta">
+              <div>
+                👤 دانش‌آموز:
+                ${escapeHtml(activity.studentName || activity.studentId || "-")}
+              </div>
+
+              <div>
+                📄 فایل:
+                ${escapeHtml(activity.fileName || "-")}
+              </div>
+
+              <div>
+                🕒 تاریخ ارسال:
+                ${escapeHtml(submittedDate)}
+              </div>
+
+              <div class="status">
+                وضعیت: ${escapeHtml(activity.status || "-")}
+              </div>
+            </div>
+          `;
+
+          activitiesGrid.appendChild(card);
+        });
+      } catch (error) {
+        console.error(error);
+        container.innerHTML = `
+          <div class="error">
+            دریافت فعالیت‌ها با خطا مواجه شد.
+            <br><br>
+            ${escapeHtml(error.message)}
+          </div>
+        `;
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function logout() {
+      localStorage.removeItem("sessionId");
+      localStorage.removeItem("user");
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
