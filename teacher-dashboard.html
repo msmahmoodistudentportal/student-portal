@@ -113,6 +113,83 @@
       margin-top: 10px;
     }
 
+    .file-link {
+      display: inline-block;
+      margin-top: 6px;
+      color: #2563eb;
+      text-decoration: none;
+    }
+
+    .file-link:hover {
+      text-decoration: underline;
+    }
+
+    .grade-box {
+      margin-top: 20px;
+      padding-top: 18px;
+      border-top: 1px solid #e5e7eb;
+    }
+
+    .grade-result {
+      margin-bottom: 14px;
+      color: #4b5563;
+      line-height: 2;
+    }
+
+    .grade-box label {
+      display: block;
+      margin-bottom: 6px;
+      color: #374151;
+      font-size: 13px;
+    }
+
+    .grade-box input,
+    .grade-box textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .grade-box textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    .grade-button {
+      border: none;
+      background: #2563eb;
+      color: white;
+      padding: 10px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .grade-button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .grade-message {
+      margin-top: 10px;
+      line-height: 1.8;
+    }
+
+    .grade-message.success {
+      color: #166534;
+    }
+
+    .grade-message.error {
+      background: transparent;
+      color: #991b1b;
+      padding: 0;
+    }
+
     .empty,
     .loading {
       background: white;
@@ -259,6 +336,14 @@
             ? new Date(activity.submittedAt).toLocaleString("fa-IR")
             : "-";
 
+          const fileUrl = activity.storageFileId
+            ? `https://drive.google.com/file/d/${encodeURIComponent(activity.storageFileId)}/view`
+            : "";
+
+          const fileLink = fileUrl
+            ? `<a class="file-link" href="${fileUrl}" target="_blank" rel="noopener noreferrer">مشاهده PDF</a>`
+            : "<span>لینک فایل موجود نیست</span>";
+
           card.innerHTML = `
             <h3>📘 ${escapeHtml(activity.title || "بدون عنوان")}</h3>
 
@@ -271,6 +356,8 @@
               <div>
                 📄 فایل:
                 ${escapeHtml(activity.fileName || "-")}
+                <br>
+                ${fileLink}
               </div>
 
               <div>
@@ -282,7 +369,90 @@
                 وضعیت: ${escapeHtml(activity.status || "-")}
               </div>
             </div>
+
+            <div class="grade-box">
+              <div class="grade-result">
+                <div class="saved-score">
+                  نمره ثبت‌شده:
+                  ${escapeHtml(activity.score === "" || activity.score == null ? "ثبت نشده" : activity.score)}
+                </div>
+                <div class="saved-comment">
+                  نظر ثبت‌شده:
+                  ${escapeHtml(activity.teacherComment || "ثبت نشده")}
+                </div>
+              </div>
+
+              <label for="score-${escapeHtml(activity.activityId)}">نمره</label>
+              <input
+                type="number"
+                class="score-input"
+                id="score-${escapeHtml(activity.activityId)}"
+                value="${escapeHtml(activity.score === "" || activity.score == null ? "" : activity.score)}"
+                min="0"
+                max="20"
+                step="0.01"
+                placeholder="مثلاً ۱۸.۵"
+              >
+
+              <label for="comment-${escapeHtml(activity.activityId)}">نظر معلم</label>
+              <textarea
+                class="comment-input"
+                id="comment-${escapeHtml(activity.activityId)}"
+                placeholder="نظر خود را وارد کنید..."
+              >${escapeHtml(activity.teacherComment || "")}</textarea>
+
+              <button type="button" class="grade-button">ثبت نمره</button>
+              <div class="grade-message" aria-live="polite"></div>
+            </div>
           `;
+
+          const gradeButton = card.querySelector(".grade-button");
+          const scoreInput = card.querySelector(".score-input");
+          const commentInput = card.querySelector(".comment-input");
+          const gradeMessage = card.querySelector(".grade-message");
+          const savedScore = card.querySelector(".saved-score");
+          const savedComment = card.querySelector(".saved-comment");
+
+          gradeButton.addEventListener("click", async () => {
+            gradeButton.disabled = true;
+            gradeMessage.className = "grade-message";
+            gradeMessage.textContent = "در حال ثبت...";
+
+            try {
+              const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "text/plain;charset=utf-8"
+                },
+                body: JSON.stringify({
+                  action: "submitGrade",
+                  sessionId: sessionId,
+                  activityId: activity.activityId,
+                  score: scoreInput.value,
+                  teacherComment: commentInput.value
+                })
+              });
+
+              const result = await response.json();
+
+              if (!result.success) {
+                throw new Error(result.error || result.message || "ثبت نمره ناموفق بود.");
+              }
+
+              gradeMessage.className = "grade-message success";
+              gradeMessage.textContent = "نمره و نظر با موفقیت ثبت شد.";
+              savedScore.textContent =
+                `نمره ثبت‌شده: ${scoreInput.value || "ثبت نشده"}`;
+              savedComment.textContent =
+                `نظر ثبت‌شده: ${commentInput.value || "ثبت نشده"}`;
+            } catch (error) {
+              console.error(error);
+              gradeMessage.className = "grade-message error";
+              gradeMessage.textContent = error.message;
+            } finally {
+              gradeButton.disabled = false;
+            }
+          });
 
           activitiesGrid.appendChild(card);
         });

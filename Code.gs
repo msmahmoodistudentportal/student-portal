@@ -707,6 +707,26 @@ if (request.action === 'getTeacherActivities') {
       ContentService.MimeType.JSON
     );
 }
+if (request.action === 'submitGrade') {
+  if (!request.sessionId) {
+    throw new Error('Session ID is required.');
+  }
+
+  const result = submitGrade(
+    request.sessionId,
+    request.activityId,
+    request.score,
+    request.teacherComment
+  );
+
+  return ContentService
+    .createTextOutput(
+      JSON.stringify(result)
+    )
+    .setMimeType(
+      ContentService.MimeType.JSON
+    );
+}
     throw new Error('Unknown action.');
 
   } catch (error) {
@@ -927,7 +947,6 @@ function submitStudentActivity(
 
 
   for (let i = 1; i < sessionData.length; i++) {
-
     const row = sessionData[i];
 
     const storedSessionId = row[0];
@@ -1037,6 +1056,11 @@ function submitStudentActivity(
 
   const file =
     studentFolder.createFile(blob);
+
+  file.setSharing(
+    DriveApp.Access.ANYONE_WITH_LINK,
+    DriveApp.Permission.VIEW
+  );
 
 
   // -----------------------------------
@@ -1332,6 +1356,98 @@ function getTeacherActivities(sessionId) {
 
   };
 
+}
+function submitGrade(
+  sessionId,
+  activityId,
+  score,
+  teacherComment
+) {
+  const properties = PropertiesService.getScriptProperties();
+  const spreadsheetId = properties.getProperty('SPREADSHEET_ID');
+
+  if (!spreadsheetId) {
+    throw new Error('SPREADSHEET_ID is not configured.');
+  }
+
+  if (!sessionId) {
+    throw new Error('Session ID is required.');
+  }
+
+  if (!activityId) {
+    throw new Error('Activity ID is required.');
+  }
+
+  const ss = SpreadsheetApp.openById(spreadsheetId);
+  const sessionsSheet = ss.getSheetByName('Sessions');
+  const activitiesSheet = ss.getSheetByName('Activities');
+
+  if (!sessionsSheet) {
+    throw new Error('Sessions sheet not found.');
+  }
+
+  if (!activitiesSheet) {
+    throw new Error('Activities sheet not found.');
+  }
+
+  const sessionData = sessionsSheet.getDataRange().getValues();
+  let userId = null;
+  let role = null;
+
+  for (let i = 1; i < sessionData.length; i++) {
+    const row = sessionData[i];
+
+    if (row[0] !== sessionId) {
+      continue;
+    }
+
+    if (row[5] !== 'Active') {
+      throw new Error('Session is not active.');
+    }
+
+    if (new Date(row[4]) < new Date()) {
+      throw new Error('Session has expired.');
+    }
+
+    userId = row[1];
+    role = row[2];
+    break;
+  }
+
+  if (!userId) {
+    throw new Error('Invalid session.');
+  }
+
+  if (role !== 'Teacher') {
+    throw new Error('Access denied. Teacher role required.');
+  }
+
+  const activityData = activitiesSheet.getDataRange().getValues();
+  let activityRow = -1;
+
+  for (let i = 1; i < activityData.length; i++) {
+    if (activityData[i][0] === activityId) {
+      activityRow = i + 1;
+      break;
+    }
+  }
+
+  if (activityRow === -1) {
+    throw new Error('Activity not found.');
+  }
+
+  activitiesSheet
+    .getRange(activityRow, 14, 1, 4)
+    .setValues([[
+      score,
+      teacherComment || '',
+      new Date(),
+      userId
+    ]]);
+
+  return {
+    success: true
+  };
 }
 function testSubmitStudentActivity() {
 
