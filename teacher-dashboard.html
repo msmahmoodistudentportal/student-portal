@@ -203,6 +203,74 @@
       color: #2563eb;
     }
 
+    .assignment-box {
+      background: white;
+      border-radius: 14px;
+      padding: 25px;
+      margin-bottom: 30px;
+      box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+    }
+
+    .assignment-box h2 {
+      margin-top: 0;
+      color: #111827;
+    }
+
+    .assignment-field {
+      margin-bottom: 16px;
+    }
+
+    .assignment-field label {
+      display: block;
+      margin-bottom: 6px;
+      color: #374151;
+      font-size: 13px;
+    }
+
+    .assignment-field input,
+    .assignment-field textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .assignment-field textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .assignment-button {
+      border: none;
+      background: #16a34a;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    .assignment-button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .assignment-message {
+      margin-top: 12px;
+      line-height: 1.8;
+    }
+
+    .assignment-message.success {
+      color: #166534;
+    }
+
+    .assignment-message.error {
+      color: #991b1b;
+    }
+
     .error {
       background: #fee2e2;
       color: #991b1b;
@@ -253,6 +321,36 @@
       </div>
     </section>
 
+    <section class="assignment-box">
+      <h2>ایجاد تکلیف جدید</h2>
+
+      <div class="assignment-field">
+        <label for="assignmentTitle">عنوان تکلیف</label>
+        <input type="text" id="assignmentTitle" placeholder="مثلاً: تکلیف فصل اول">
+      </div>
+
+      <div class="assignment-field">
+        <label for="assignmentDescription">توضیحات</label>
+        <textarea id="assignmentDescription" placeholder="توضیحات مربوط به تکلیف..."></textarea>
+      </div>
+
+      <div class="assignment-field">
+        <label for="assignmentClassId">ClassID</label>
+        <input type="text" id="assignmentClassId" value="CLS-TEST-001">
+      </div>
+
+      <div class="assignment-field">
+        <label for="assignmentDeadline">مهلت ارسال</label>
+        <input type="date" id="assignmentDeadline">
+      </div>
+
+      <button type="button" class="assignment-button" id="createAssignmentButton">
+        ایجاد تکلیف
+      </button>
+
+      <div id="assignmentMessage" class="assignment-message" aria-live="polite"></div>
+    </section>
+
     <h2 class="section-title">📚 فعالیت‌های ارسالی دانش‌آموزان</h2>
 
     <section id="activitiesContainer">
@@ -267,6 +365,8 @@
     const sessionId = localStorage.getItem("sessionId");
     const userData = localStorage.getItem("user");
     const container = document.getElementById("activitiesContainer");
+    const createAssignmentButton = document.getElementById("createAssignmentButton");
+    const assignmentMessage = document.getElementById("assignmentMessage");
 
     if (!sessionId || !userData) {
       window.location.href = "index.html";
@@ -292,7 +392,64 @@
         `سلام ${user.firstName || "معلم"} ${user.lastName || "عزیز"} 🌷`;
       document.getElementById("username").textContent = user.username || user.userId || "-";
       document.getElementById("userId").textContent = user.userId || "-";
+      document.getElementById("assignmentClassId").value = user.classId || "CLS-TEST-001";
+      createAssignmentButton.addEventListener("click", createAssignment);
       loadActivities();
+    }
+
+    async function createAssignment() {
+      const titleInput = document.getElementById("assignmentTitle");
+      const descriptionInput = document.getElementById("assignmentDescription");
+      const classIdInput = document.getElementById("assignmentClassId");
+      const deadlineInput = document.getElementById("assignmentDeadline");
+
+      const title = titleInput.value.trim();
+      const classId = classIdInput.value.trim();
+
+      if (!title || !classId || !deadlineInput.value) {
+        assignmentMessage.className = "assignment-message error";
+        assignmentMessage.textContent = "عنوان، ClassID و مهلت ارسال را وارد کنید.";
+        return;
+      }
+
+      createAssignmentButton.disabled = true;
+      assignmentMessage.className = "assignment-message";
+      assignmentMessage.textContent = "در حال ایجاد تکلیف...";
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify({
+            action: "createAssignment",
+            sessionId: sessionId,
+            title: title,
+            description: descriptionInput.value.trim(),
+            classId: classId,
+            deadline: deadlineInput.value
+          })
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+          throw new Error(result.error || result.message || "ایجاد تکلیف ناموفق بود.");
+        }
+
+        assignmentMessage.className = "assignment-message success";
+        assignmentMessage.textContent = "تکلیف با موفقیت ایجاد شد.";
+        titleInput.value = "";
+        descriptionInput.value = "";
+        deadlineInput.value = "";
+      } catch (error) {
+        console.error(error);
+        assignmentMessage.className = "assignment-message error";
+        assignmentMessage.textContent = error.message;
+      } finally {
+        createAssignmentButton.disabled = false;
+      }
     }
 
     async function loadActivities() {
