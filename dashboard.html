@@ -324,24 +324,43 @@
   </main>
 
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jalaali-js/1.2.6/jalaali.min.js"></script>
   <script>
 
-    function toPersianDate(value) {
-      const date = value instanceof Date ? value : new Date(value);
+    function toPersianDate(input) {
+      const date = new Date(input);
+      const gy = date.getFullYear();
+      const gm = date.getMonth() + 1;
+      const gd = date.getDate();
 
-      if (Number.isNaN(date.getTime())) {
-        return "-";
+      function div(a, b) { return Math.floor(a / b); }
+
+      let gy2 = (gm > 2) ? (gy + 1) : gy;
+      let days = 355666 + (365 * gy) + div(gy2 + 399, 400) - div(gy2 + 99, 100) + div(gy2, 4) + gd + [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334][gm - 1];
+
+      let jy = -1595 + (33 * div(days, 12053));
+      days %= 12053;
+      jy += 4 * div(days, 1461);
+      days %= 1461;
+      if (days > 365) {
+        jy += div(days - 1, 365);
+        days = (days - 1) % 365;
       }
 
-      const jalaliDate = jalaali.toJalaali(
-        date.getFullYear(),
-        date.getMonth() + 1,
-        date.getDate()
-      );
+      let jm, jd;
+      if (days < 186) {
+        jm = 1 + div(days, 31);
+        jd = 1 + (days % 31);
+      } else {
+        jm = 7 + div(days - 186, 30);
+        jd = 1 + ((days - 186) % 30);
+      }
 
-      return `${jalaliDate.jy}/${String(jalaliDate.jm).padStart(2, "0")}/${String(jalaliDate.jd).padStart(2, "0")}`
-        .replace(/\d/g, digit => "۰۱۲۳۴۵۶۷۸۹"[digit]);
+      const persianDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+      function toPersianNum(n) {
+        return String(n).split('').map(d => persianDigits[d] || d).join('');
+      }
+
+      return toPersianNum(jy) + '/' + toPersianNum(String(jm).padStart(2, '0')) + '/' + toPersianNum(String(jd).padStart(2, '0'));
     }
 
     const API_URL =
