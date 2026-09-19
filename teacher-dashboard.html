@@ -358,7 +358,25 @@
     </section>
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jalaali-js/1.2.6/jalaali.min.js"></script>
   <script>
+    function toPersianDate(value) {
+      const date = value instanceof Date ? value : new Date(value);
+
+      if (Number.isNaN(date.getTime())) {
+        return "-";
+      }
+
+      const jalaliDate = jalaali.toJalaali(
+        date.getFullYear(),
+        date.getMonth() + 1,
+        date.getDate()
+      );
+
+      return `${jalaliDate.jy}/${String(jalaliDate.jm).padStart(2, "0")}/${String(jalaliDate.jd).padStart(2, "0")}`
+        .replace(/\d/g, digit => "۰۱۲۳۴۵۶۷۸۹"[digit]);
+    }
+
     const API_URL =
       "https://script.google.com/macros/s/AKfycbx-9uxxqe9EXAsWLSD8QZ5vrsKQUbjnH-uL9sC_SpDQnp8EKqjztJDcKnu_zx_lFfya/exec";
 
@@ -490,7 +508,7 @@
           card.className = "activity-card";
 
           const submittedDate = activity.submittedAt
-            ? new Date(activity.submittedAt).toLocaleString("fa-IR")
+            ? toPersianDate(activity.submittedAt)
             : "-";
 
           const fileUrl = activity.storageFileId
