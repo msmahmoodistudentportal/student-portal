@@ -341,7 +341,7 @@
             : "";
 
           const fileLink = fileUrl
-            ? `<a class="file-link" href="${fileUrl}" target="_blank" rel="noopener noreferrer">مشاهده PDF</a>`
+            ? `<a class="file-link" href="${fileUrl}" target="_blank" rel="noopener noreferrer">${activity.fileType === "Image" ? "مشاهده عکس" : "مشاهده PDF"}</a>`
             : "<span>لینک فایل موجود نیست</span>";
 
           card.innerHTML = `

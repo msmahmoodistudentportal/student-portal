@@ -291,11 +291,11 @@
     <input
       type="file"
       id="activityFile"
-      accept="application/pdf,.pdf"
+      accept="application/pdf,.pdf,image/jpeg,image/png,image/heic,image/heif,.jpg,.jpeg,.png,.heic,.heif"
     >
 
     <small>
-      فقط فایل PDF مجاز است.
+      فایل PDF یا عکس (JPG/PNG/HEIC) مجاز است.
     </small>
 
   </div>
@@ -591,10 +591,18 @@ async function submitActivity() {
 
 
   // بررسی نوع فایل
-  if (file.type !== "application/pdf") {
+  const allowedFileTypes = [
+    "application/pdf",
+    "image/jpeg",
+    "image/png",
+    "image/heic",
+    "image/heif"
+  ];
+
+  if (!allowedFileTypes.includes(file.type)) {
 
     message.innerHTML =
-      "❌ فقط فایل PDF مجاز است.";
+      "❌ فقط فایل PDF یا عکس (JPG/PNG/HEIC) مجاز است.";
 
     return;
   }

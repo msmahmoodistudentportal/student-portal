@@ -1018,13 +1018,21 @@ function submitStudentActivity(
 
 
   // -----------------------------------
-  // 3. بررسی PDF
+  // 3. بررسی نوع فایل
   // -----------------------------------
 
-  if (mimeType !== 'application/pdf') {
+  const allowedMimeTypes = [
+    'application/pdf',
+    'image/jpeg',
+    'image/png',
+    'image/heic',
+    'image/heif'
+  ];
+
+  if (!allowedMimeTypes.includes(mimeType)) {
 
     throw new Error(
-      'Only PDF files are allowed.'
+      'Only PDF, JPG or PNG files are allowed.'
     );
 
   }
@@ -1041,7 +1049,7 @@ function submitStudentActivity(
   const blob =
     Utilities.newBlob(
       decodedBytes,
-      'application/pdf',
+      mimeType,
       fileName
     );
 
@@ -1093,8 +1101,8 @@ function submitStudentActivity(
     title || 'تکلیف',
     description || '',
     file.getName(),
-    'PDF',
-    'application/pdf',
+    mimeType === 'application/pdf' ? 'PDF' : 'Image',
+    mimeType,
     file.getSize(),
     file.getId(),
     internalReference,
