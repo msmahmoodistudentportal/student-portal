@@ -707,6 +707,44 @@ if (request.action === 'getTeacherActivities') {
       ContentService.MimeType.JSON
     );
 }
+if (request.action === 'createAssignment') {
+  if (!request.sessionId) {
+    throw new Error('Session ID is required.');
+  }
+
+  const result = createAssignment(
+    request.sessionId,
+    request.title,
+    request.description,
+    request.classId,
+    request.deadline
+  );
+
+  return ContentService
+    .createTextOutput(
+      JSON.stringify(result)
+    )
+    .setMimeType(
+      ContentService.MimeType.JSON
+    );
+}
+if (request.action === 'getAssignmentsForClass') {
+  if (!request.sessionId) {
+    throw new Error('Session ID is required.');
+  }
+
+  const result = getAssignmentsForClass(
+    request.sessionId
+  );
+
+  return ContentService
+    .createTextOutput(
+      JSON.stringify(result)
+    )
+    .setMimeType(
+      ContentService.MimeType.JSON
+    );
+}
 if (request.action === 'submitGrade') {
   if (!request.sessionId) {
     throw new Error('Session ID is required.');
@@ -742,6 +780,213 @@ if (request.action === 'submitGrade') {
         ContentService.MimeType.JSON
       );
   }
+}
+function createAssignmentsSheet() {
+  const properties = PropertiesService.getScriptProperties();
+  const spreadsheetId = properties.getProperty('SPREADSHEET_ID');
+
+  if (!spreadsheetId) {
+    throw new Error('SPREADSHEET_ID is not configured.');
+  }
+
+  const ss = SpreadsheetApp.openById(spreadsheetId);
+  let assignmentsSheet = ss.getSheetByName('Assignments');
+
+  if (!assignmentsSheet) {
+    assignmentsSheet = ss.insertSheet('Assignments');
+    assignmentsSheet.getRange(1, 1, 1, 8).setValues([[
+      'AssignmentID',
+      'Title',
+      'Description',
+      'ClassID',
+      'Deadline',
+      'Status',
+      'CreatedBy',
+      'CreatedAt'
+    ]]);
+  }
+}
+
+function createAssignment(
+  sessionId,
+  title,
+  description,
+  classId,
+  deadline
+) {
+  const properties = PropertiesService.getScriptProperties();
+  const spreadsheetId = properties.getProperty('SPREADSHEET_ID');
+
+  if (!spreadsheetId) {
+    throw new Error('SPREADSHEET_ID is not configured.');
+  }
+
+  if (!sessionId) {
+    throw new Error('Session ID is required.');
+  }
+
+  const ss = SpreadsheetApp.openById(spreadsheetId);
+  const sessionsSheet = ss.getSheetByName('Sessions');
+  const assignmentsSheet = ss.getSheetByName('Assignments');
+
+  if (!sessionsSheet) {
+    throw new Error('Sessions sheet not found.');
+  }
+
+  if (!assignmentsSheet) {
+    throw new Error('Assignments sheet not found.');
+  }
+
+  const sessionData = sessionsSheet.getDataRange().getValues();
+  let userId = null;
+  let role = null;
+
+  for (let i = 1; i < sessionData.length; i++) {
+    const row = sessionData[i];
+
+    if (row[0] !== sessionId) {
+      continue;
+    }
+
+    if (row[5] !== 'Active') {
+      throw new Error('Session is not active.');
+    }
+
+    if (new Date(row[4]) < new Date()) {
+      throw new Error('Session has expired.');
+    }
+
+    userId = row[1];
+    role = row[2];
+    break;
+  }
+
+  if (!userId) {
+    throw new Error('Invalid session.');
+  }
+
+  if (role !== 'Teacher') {
+    throw new Error('Access denied. Teacher role required.');
+  }
+
+  const assignmentId = 'ASG-' + Utilities.getUuid();
+
+  assignmentsSheet.appendRow([
+    assignmentId,
+    title || '',
+    description || '',
+    classId || '',
+    deadline || '',
+    'Active',
+    userId,
+    new Date()
+  ]);
+
+  return {
+    success: true,
+    assignmentId: assignmentId
+  };
+}
+
+function getAssignmentsForClass(sessionId) {
+  const properties = PropertiesService.getScriptProperties();
+  const spreadsheetId = properties.getProperty('SPREADSHEET_ID');
+
+  if (!spreadsheetId) {
+    throw new Error('SPREADSHEET_ID is not configured.');
+  }
+
+  if (!sessionId) {
+    throw new Error('Session ID is required.');
+  }
+
+  const ss = SpreadsheetApp.openById(spreadsheetId);
+  const sessionsSheet = ss.getSheetByName('Sessions');
+  const usersSheet = ss.getSheetByName('users');
+  const assignmentsSheet = ss.getSheetByName('Assignments');
+
+  if (!sessionsSheet) {
+    throw new Error('Sessions sheet not found.');
+  }
+
+  if (!usersSheet) {
+    throw new Error('users sheet not found.');
+  }
+
+  if (!assignmentsSheet) {
+    throw new Error('Assignments sheet not found.');
+  }
+
+  const sessionData = sessionsSheet.getDataRange().getValues();
+  let userId = null;
+
+  for (let i = 1; i < sessionData.length; i++) {
+    const row = sessionData[i];
+
+    if (row[0] !== sessionId) {
+      continue;
+    }
+
+    if (row[5] !== 'Active') {
+      throw new Error('Session is not active.');
+    }
+
+    if (new Date(row[4]) < new Date()) {
+      throw new Error('Session has expired.');
+    }
+
+    userId = row[1];
+    break;
+  }
+
+  if (!userId) {
+    throw new Error('Invalid session.');
+  }
+
+  const userData = usersSheet.getDataRange().getValues();
+  let classId = null;
+
+  for (let i = 1; i < userData.length; i++) {
+    const row = userData[i];
+
+    if (row[0] !== userId) {
+      continue;
+    }
+
+    classId = row[3];
+    break;
+  }
+
+  if (!classId) {
+    throw new Error('Student class not found.');
+  }
+
+  const assignmentData = assignmentsSheet.getDataRange().getValues();
+  const assignments = [];
+
+  for (let i = 1; i < assignmentData.length; i++) {
+    const row = assignmentData[i];
+
+    if (row[3] !== classId || row[5] !== 'Active') {
+      continue;
+    }
+
+    assignments.push({
+      assignmentId: row[0],
+      title: row[1],
+      description: row[2],
+      classId: row[3],
+      deadline: row[4],
+      status: row[5],
+      createdBy: row[6],
+      createdAt: row[7]
+    });
+  }
+
+  return {
+    success: true,
+    assignments: assignments
+  };
 }
 function testLogin() {
 
