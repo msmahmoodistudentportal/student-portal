@@ -328,9 +328,9 @@
 
     function toPersianDate(input) {
       const date = new Date(input);
-      const gy = date.getFullYear();
-      const gm = date.getMonth() + 1;
-      const gd = date.getDate();
+      const gy = date.getUTCFullYear();
+      const gm = date.getUTCMonth() + 1;
+      const gd = date.getUTCDate();
 
       function div(a, b) { return Math.floor(a / b); }
 
